@@ -1,14 +1,30 @@
 const User = require("../models/User");
+const bcrypt = require("bcrypt");
 
 module.exports = function (app, cors) {
+  // post /login 登入
+  app.post("/login", async (req, res) => {
+    const { account, password } = req.body;
+    // 驗證帳號密碼是否正確
+    const user = await User.findByCredentials(account, password);
+    // 為該用戶產生 token
+    const token = await user.generateAuthToken();
+    res.send({ user, token });
+  });
+
   // post /user 註冊用戶
   app.post("/user", async (req, res) => {
     try {
+      // 將使用者輸入的密碼進行加密
+      const hashPwd = bcrypt.hashSync(req.body.password, 10);
+      let userObj = { ...req.body, password: hashPwd };
       // 新增一個 User model 的實例(instance)
-      const user = new User(req.body);
+      const user = new User(userObj);
+      // 產生 token
+      const token = await user.generateAuthToken();
       // 將資料保存到 db 中
       await user.save();
-      res.send(user);
+      res.send({ user, token });
     } catch (e) {
       res.status(404).send(e);
     }

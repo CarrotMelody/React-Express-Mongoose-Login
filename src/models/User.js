@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 // 用戶 Schema
 const UserSchema = new mongoose.Schema({
@@ -14,6 +16,7 @@ const UserSchema = new mongoose.Schema({
     required: true,
     trim: true,
     minLength: [5, "密碼需至少 5 個字符以上"],
+    maxLength: 255,
     // 驗證密碼
     validate(value) {
       if (value.toLowerCase().includes("123456")) {
@@ -30,14 +33,28 @@ const UserSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// 添加使用者相關方法
-UserSchema.method("getAccount", function () {
-  return this.account;
-});
+// 產生 token 方法
+UserSchema.methods.generateAuthToken = async function () {
+  // this: 當前用戶實例
+  const user = this;
+  // 將使用者資料加密產生成 token
+  const payload = { account: this.account, _id: user._id.toString() };
+  const token = jwt.sign(payload, 'pluto', { expiresIn: '24h' });
+  // 回傳 token
+  return token;
+}
 
-UserSchema.method("getAuthority", function () {
-  return this.authority;
-});
+// 驗證用戶是否存在
+UserSchema.statics.findByCredentials = async (account, password) => {
+  // 根據帳號至資料庫找尋該用戶資料
+  const user = await User.findOne({ account });
+  if (!user) throw new Error('登入失敗!');
+  // 驗證密碼
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) throw new Error('登入失敗!');
+  // 驗證成功回傳該用戶完整資料
+  return user;
+}
 
 // 會在 mongo 中建立名為 User 的 collection
 const User = mongoose.model("User", UserSchema);
