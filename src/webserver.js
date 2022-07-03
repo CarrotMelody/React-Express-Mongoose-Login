@@ -15,7 +15,9 @@ WebServer.get("/", (req, res) => {
   res.send("Hello, World!");
 });
 
-require("./router")(WebServer, cors);
+const auth = require("./middlewares/auth.middleware");
+WebServer.use(auth);
+require("./routes")(WebServer, cors);
 
 WebServer.use(function onError(err, req, res, next) {
   res.statusCode = 500;
