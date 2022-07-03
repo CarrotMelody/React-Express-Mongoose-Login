@@ -24,6 +24,7 @@ const errors = [
   { key: 'WRONG_TOKEN', message: "TOKEN 無效" },
   { key: 'WRONG_ACCOUNT', message: "帳號錯誤" },
   { key: 'WRONG_PASSWORD', message: "密碼錯誤" },
+  { key: 'DUPLICATE_ACCOUNT', message: "該帳號已被註冊" }
 ];
 
 WebServer.use((err, req, res, next) => {

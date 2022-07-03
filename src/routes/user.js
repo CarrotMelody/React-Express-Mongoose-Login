@@ -16,8 +16,8 @@ module.exports = function (app, cors) {
     }
   });
 
-  // post /user 註冊用戶
-  app.post("/user", async (req, res, next) => {
+  // post /register 註冊用戶
+  app.post("/register", async (req, res, next) => {
     try {
       // 將使用者輸入的密碼進行加密
       const hashPwd = bcrypt.hashSync(req.body.password, 10);
@@ -27,7 +27,12 @@ module.exports = function (app, cors) {
       // 產生 token
       const token = await user.generateAuthToken();
       // 將資料保存到 db 中
-      await user.save();
+      await user.save().catch((e) => {
+        if (e.code === 11000)
+          throw new Error("DUPLICATE_ACCOUNT");
+        else
+          throw new Error(e);
+      });
       res.send({ user, token });
     } catch (e) {
       next(e);
