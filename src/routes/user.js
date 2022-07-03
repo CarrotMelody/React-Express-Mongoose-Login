@@ -3,17 +3,21 @@ const bcrypt = require("bcrypt");
 
 module.exports = function (app, cors) {
   // post /login 登入
-  app.post("/login", async (req, res) => {
-    const { account, password } = req.body;
-    // 驗證帳號密碼是否正確
-    const user = await User.findByCredentials(account, password);
-    // 為該用戶產生 token
-    const token = await user.generateAuthToken();
-    res.send({ user, token });
+  app.post("/login", async (req, res, next) => {
+    try {
+      const { account, password } = req.body;
+      // 驗證帳號密碼是否正確
+      const user = await User.findByCredentials(account, password);
+      // 為該用戶產生 token
+      const token = await user.generateAuthToken();
+      res.send({ user, token });
+    } catch (e) {
+      next(e);
+    }
   });
 
   // post /user 註冊用戶
-  app.post("/user", async (req, res) => {
+  app.post("/user", async (req, res, next) => {
     try {
       // 將使用者輸入的密碼進行加密
       const hashPwd = bcrypt.hashSync(req.body.password, 10);
@@ -26,7 +30,7 @@ module.exports = function (app, cors) {
       await user.save();
       res.send({ user, token });
     } catch (e) {
-      res.status(404).send(e);
+      next(e);
     }
   });
 

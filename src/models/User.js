@@ -48,10 +48,10 @@ UserSchema.methods.generateAuthToken = async function () {
 UserSchema.statics.findByCredentials = async (account, password) => {
   // 根據帳號至資料庫找尋該用戶資料
   const user = await User.findOne({ account });
-  if (!user) throw new Error('登入失敗!');
+  if (!user) throw new Error("WRONG_ACCOUNT");
   // 驗證密碼
   const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) throw new Error('登入失敗!');
+  if (!isMatch) throw new Error("WRONG_PASSWORD");
   // 驗證成功回傳該用戶完整資料
   return user;
 }

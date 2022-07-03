@@ -19,9 +19,20 @@ const auth = require("./middlewares/auth.middleware");
 WebServer.use(auth);
 require("./routes")(WebServer, cors);
 
-WebServer.use(function onError(err, req, res, next) {
-  res.statusCode = 500;
-  res.end(err);
+// 捕獲錯誤
+const errors = [
+  { key: 'WRONG_TOKEN', message: "TOKEN 無效" },
+  { key: 'WRONG_ACCOUNT', message: "帳號錯誤" },
+  { key: 'WRONG_PASSWORD', message: "密碼錯誤" },
+];
+
+WebServer.use((err, req, res, next) => {
+  const errorIndex = errors.findIndex(item => item.key === err.message);
+
+  if (errorIndex > -1)
+    return res.status(401).send({ success: false, message: errors[errorIndex].message });
+  else
+    res.status(500).send({ success: false, message: "伺服器端錯誤" });
 });
 
 module.exports = WebServer;
